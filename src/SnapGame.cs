@@ -14,33 +14,59 @@ namespace CardGames
             SwinGame.LoadFontNamed ("GameFont", "Chunkfive.otf", 12);
         }
 
-		/// <summary>
-		/// Respond to the user input -- with requests affecting myGame
-		/// </summary>
-		/// <param name="myGame">The game object to update in response to events.</param>
-		private static void HandleUserInput(Snap myGame)
-		{
-			//Fetch the next batch of UI interaction
-			SwinGame.ProcessEvents();
+        /// <summary>
+        /// Respond to the user input -- with requests affecting myGame
+        /// </summary>
+        /// <param name="myGame">The game object to update in response to events.</param>
+        private static void HandleUserInput(Snap myGame)
+        {
+            //Fetch the next batch of UI interaction
+            SwinGame.ProcessEvents();
 
-			if (SwinGame.KeyTyped (KeyCode.vk_SPACE))
-			{
+            if (SwinGame.KeyTyped (KeyCode.vk_SPACE))
+            {
                 myGame.Start();
             }
-		}
+        }
 
-		/// <summary>
-		/// Draws the game to the Window.
-		/// </summary>
-		/// <param name="myGame">The details of the game -- mostly top card and scores.</param>
-		private static void DrawGame(Snap myGame)
-		{
-			SwinGame.ClearScreen(Color.White);
+        private static byte[] tickClr = {0xff, 0xc0, 0xc0};
+        private static int[] tickVel = {0, 1, 0};
+        private static Color TickColour()
+        {
+            int i;
+            for (i = 0; i < 3; i++)
+            {
+                int prev = (i + 3 - 1) % 3;
+                tickClr[i] = (byte)((int)tickClr[i] + tickVel[i]);
 
-			// Draw the top card
-			Card top = myGame.TopCard;
-			if (top != null)
-			{
+                if (tickClr[i] == 0xff && tickVel[i] > 0)
+                {
+                    tickVel[i] = 0;
+                    tickVel[prev] = -1;
+                }
+                else if (tickClr[i] == 0xc0 && tickVel[i] < 0)
+                {
+                    tickVel[i] = 0;
+                    tickVel[prev] = 1;
+                }
+            }
+
+            return SwinGame.RGBColor(tickClr[0], tickClr[1], tickClr[2]);
+        }
+
+        /// <summary>
+        /// Draws the game to the Window.
+        /// </summary>
+        /// <param name="myGame">The details of the game -- mostly top card and scores.</param>
+        private static void DrawGame(Snap myGame)
+        {
+            //SwinGame.ClearScreen(Color.White);
+            SwinGame.ClearScreen(TickColour());
+
+            // Draw the top card
+            Card top = myGame.TopCard;
+            if (top != null)
+            {
                 SwinGame.DrawText ("Top Card is " + top.ToString (),Color.RoyalBlue,"GameFont",0, 20);
                 SwinGame.DrawText ("Top Card is " + top.ToString (),Color.RoyalBlue,"GameFont",0, 20);
                 SwinGame.DrawText ("Player 1 score: " + myGame.Score (0), Color.RoyalBlue, "GameFont",0, 30);
@@ -49,45 +75,45 @@ namespace CardGames
                 "GameFont",
                 0, 40);
                 SwinGame.DrawCell (SwinGame.BitmapNamed ("Cards"), top.CardIndex, 350, 50);
-			}
-			else
-			{
-				SwinGame.DrawText ("No card played yet...", Color.RoyalBlue, 0, 20);
-			}
+            }
+            else
+            {
+                SwinGame.DrawText ("No card played yet...", Color.RoyalBlue, 0, 20);
+            }
 
-			// Draw the back of the cards... to represent the deck
-			SwinGame.DrawCell (SwinGame.BitmapNamed ("Cards"), 52, 160, 50);
+            // Draw the back of the cards... to represent the deck
+            SwinGame.DrawCell (SwinGame.BitmapNamed ("Cards"), 52, 160, 50);
 
-			//Draw onto the screen
-			SwinGame.RefreshScreen(60);
-		}
+            //Draw onto the screen
+            SwinGame.RefreshScreen(60);
+        }
 
-		/// <summary>
-		/// Updates the game -- it should flip the cards itself once started!
-		/// </summary>
-		/// <param name="myGame">The game to be updated...</param>
-		private static void UpdateGame(Snap myGame)
-		{
-			myGame.Update(); // just ask the game to do this...
-		}
+        /// <summary>
+        /// Updates the game -- it should flip the cards itself once started!
+        /// </summary>
+        /// <param name="myGame">The game to be updated...</param>
+        private static void UpdateGame(Snap myGame)
+        {
+            myGame.Update(); // just ask the game to do this...
+        }
 
         public static void Main()
         {
             //Open the game window
             SwinGame.OpenGraphicsWindow("Snap!", 860, 500);
 
-			//Load the card images and set their cell details
+            //Load the card images and set their cell details
             LoadResources();
             
-			// Create the game!
-			Snap myGame = new Snap ();
+            // Create the game!
+            Snap myGame = new Snap ();
 
             //Run the game loop
             while(false == SwinGame.WindowCloseRequested())
             {
-				HandleUserInput (myGame);
-				DrawGame (myGame);
-				UpdateGame (myGame);
+                HandleUserInput (myGame);
+                DrawGame (myGame);
+                UpdateGame (myGame);
             }
         }
     }
